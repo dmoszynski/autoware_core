@@ -51,10 +51,7 @@ public:
       {"--ros-args", "--params-file",
        ament_index_cpp::get_package_share_directory(
          "autoware_motion_velocity_obstacle_stop_module") +
-         "/config/obstacle_stop.param.yaml",
-       "--params-file",
-       ament_index_cpp::get_package_share_directory("autoware_motion_velocity_planner") +
-         "/config/motion_velocity_planner.param.yaml"});
+         "/config/obstacle_stop.param.yaml"});
     node_ = std::make_shared<rclcpp::Node>("test_node", options);
 
     // Set required parameters directly
@@ -67,6 +64,8 @@ public:
     node_->declare_parameter("limit.max_acc", 1.0);
     node_->declare_parameter("limit.min_jerk", -1.5);
     node_->declare_parameter("limit.max_jerk", 1.5);
+
+    node_->declare_parameter("pointcloud.mask_lat_margin", 4.0);
 
     // Initialize the module
     init(*node_, "test_module");
@@ -146,6 +145,9 @@ protected:
     object->predicted_object.shape.dimensions.x = 2.0;
     object->predicted_object.shape.dimensions.y = 2.0;
     object->predicted_object.shape.dimensions.z = 2.0;
+
+    object->predicted_object.classification.resize(1);
+    object->predicted_object.classification.at(0).label = ObjectClassification::CAR;
 
     const double time_step = 1.0;
     const double prediction_time = 30.0;
