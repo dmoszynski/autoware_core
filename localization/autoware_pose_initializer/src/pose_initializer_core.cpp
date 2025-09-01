@@ -43,12 +43,12 @@ PoseInitializer::PoseInitializer(const rclcpp::NodeOptions & options)
     Initialize::name,
     std::bind(&PoseInitializer::on_initialize, this, std::placeholders::_1, std::placeholders::_2),
     rmw_qos_profile_services_default, group_srv_);
-  RCLCPP_INFO(
-    rclcpp::get_logger("DEBUG/autoware::pose_initializer::PoseInitializer::PoseInitializer"),
+  RCLCPP_WARN(
+    rclcpp::get_logger("DEBUG/autoware::pose_initializer"),
     "Initialize::Service service created");
   pub_reset_ = create_publisher<PoseWithCovarianceStamped>("pose_reset", 1);
-  RCLCPP_INFO(
-    rclcpp::get_logger("DEBUG/autoware::pose_initializer::PoseInitializer::PoseInitializer"),
+  RCLCPP_WARN(
+    rclcpp::get_logger("DEBUG/autoware::pose_initializer"),
     "PoseWithCovarianceStamped publisher created");
 
   output_pose_covariance_ = get_covariance_parameter(this, "output_pose_covariance");
@@ -80,8 +80,8 @@ PoseInitializer::PoseInitializer(const rclcpp::NodeOptions & options)
   logger_configure_ = std::make_unique<autoware_utils_logging::LoggerLevelConfigure>(this);
 
   change_state(State::Message::UNINITIALIZED);
-  RCLCPP_INFO(
-    rclcpp::get_logger("DEBUG/autoware::pose_initializer::PoseInitializer::PoseInitializer"),
+  RCLCPP_WARN(
+    rclcpp::get_logger("DEBUG/autoware::pose_initializer"),
     "State::Message::UNINITIALIZED");
 
   if (declare_parameter<bool>("user_defined_initial_pose.enable")) {
@@ -140,14 +140,14 @@ void PoseInitializer::set_user_defined_initial_pose(
   const geometry_msgs::msg::Pose initial_pose, bool need_spin)
 {
   try {
-    RCLCPP_INFO(
+    RCLCPP_WARN(
       rclcpp::get_logger(
-        "DEBUG/autoware::pose_initializer::PoseInitializer::set_user_defined_initial_pose"),
+        "DEBUG/autoware::pose_initializer::set_user_defined_initial_pose"),
       "entry");
     change_state(State::Message::INITIALIZING);
-    RCLCPP_INFO(
+    RCLCPP_WARN(
       rclcpp::get_logger(
-        "DEBUG/autoware::pose_initializer::PoseInitializer::set_user_defined_initial_pose"),
+        "DEBUG/autoware::pose_initializer::set_user_defined_initial_pose"),
       "State::Message::INITIALIZING");
     change_node_trigger(false, need_spin);
 
@@ -157,24 +157,24 @@ void PoseInitializer::set_user_defined_initial_pose(
     pose.pose.pose = initial_pose;
     pose.pose.covariance = output_pose_covariance_;
     pub_reset_->publish(pose);
-    RCLCPP_INFO(
+    RCLCPP_WARN(
       rclcpp::get_logger(
-        "DEBUG/autoware::pose_initializer::PoseInitializer::set_user_defined_initial_pose"),
+        "DEBUG/autoware::pose_initializer::set_user_defined_initial_pose"),
       "pose published");
 
     change_node_trigger(true, need_spin);
     change_state(State::Message::INITIALIZED);
-    RCLCPP_INFO(
+    RCLCPP_WARN(
       rclcpp::get_logger(
-        "DEBUG/autoware::pose_initializer::PoseInitializer::set_user_defined_initial_pose"),
+        "DEBUG/autoware::pose_initializer::set_user_defined_initial_pose"),
       "State::Message::INITIALIZED");
 
     RCLCPP_INFO(get_logger(), "Set user defined initial pose");
   } catch (const autoware_adapi_v1_msgs::msg::ResponseStatus & error) {
     change_state(State::Message::UNINITIALIZED);
-    RCLCPP_INFO(
+    RCLCPP_WARN(
       rclcpp::get_logger(
-        "DEBUG/autoware::pose_initializer::PoseInitializer::set_user_defined_initial_pose"),
+        "DEBUG/autoware::pose_initializer::set_user_defined_initial_pose"),
       "State::Message::UNINITIALIZED");
     RCLCPP_WARN(get_logger(), "Could not set user defined initial pose");
   }
@@ -185,8 +185,8 @@ void PoseInitializer::on_initialize(
   const Initialize::Service::Response::SharedPtr res)
 {
   try {
-    RCLCPP_INFO(
-      rclcpp::get_logger("DEBUG/autoware::pose_initializer::PoseInitializer::on_initialize"),
+    RCLCPP_WARN(
+      rclcpp::get_logger("DEBUG/autoware::pose_initializer::on_initialize"),
       "Handling request");
     // NOTE: This function is not executed during initialization because mutually exclusive.
     if (stop_check_ && !stop_check_->isVehicleStopped(stop_check_duration_)) {
@@ -199,8 +199,8 @@ void PoseInitializer::on_initialize(
 
     if (req->method == Initialize::Service::Request::AUTO) {
       change_state(State::Message::INITIALIZING);
-      RCLCPP_INFO(
-        rclcpp::get_logger("DEBUG/autoware::pose_initializer::PoseInitializer::on_initialize"),
+      RCLCPP_WARN(
+        rclcpp::get_logger("DEBUG/autoware::pose_initializer::on_initialize"),
         "State::Message::INITIALIZING");
       change_node_trigger(false, false);
 
@@ -247,15 +247,15 @@ void PoseInitializer::on_initialize(
 
       pose.pose.covariance = output_pose_covariance_;
       pub_reset_->publish(pose);
-      RCLCPP_INFO(
-        rclcpp::get_logger("DEBUG/autoware::pose_initializer::PoseInitializer::on_initialize"),
+      RCLCPP_WARN(
+        rclcpp::get_logger("DEBUG/autoware::pose_initializer::on_initialize"),
         "pose published");
 
       change_node_trigger(true, false);
       res->status.success = true;
       change_state(State::Message::INITIALIZED);
-      RCLCPP_INFO(
-        rclcpp::get_logger("DEBUG/autoware::pose_initializer::PoseInitializer::on_initialize"),
+      RCLCPP_WARN(
+        rclcpp::get_logger("DEBUG/autoware::pose_initializer::on_initialize"),
         "State::Message::INITIALIZED");
 
     } else if (req->method == Initialize::Service::Request::DIRECT) {
@@ -289,8 +289,8 @@ void PoseInitializer::on_initialize(
     res->status.code = error.code;
     res->status.message = error.message;
     change_state(State::Message::UNINITIALIZED);
-    RCLCPP_INFO(
-      rclcpp::get_logger("DEBUG/autoware::pose_initializer::PoseInitializer::on_initialize"),
+    RCLCPP_WARN(
+      rclcpp::get_logger("DEBUG/autoware::pose_initializer::on_initialize"),
       "State::Message::UNINITIALIZED");
   }
 }
